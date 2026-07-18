@@ -4,7 +4,8 @@ import { z } from 'zod';
 
 const MessageSchema = z.object({
   role: z.enum(['user', 'assistant']),
-  content: z.string().min(1),
+  content: z.string().default(''),
+  toolInvocations: z.any().optional(),
 });
 
 export async function GET(
@@ -71,6 +72,7 @@ export async function POST(
       chat_id: id,
       role: parsed.data.role,
       content: parsed.data.content,
+      tool_result: parsed.data.toolInvocations,
     })
     .select()
     .single();

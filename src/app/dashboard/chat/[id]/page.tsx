@@ -29,7 +29,11 @@ export default function ChatPage() {
         await fetch(`/api/chats/${chatId}/messages`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ role: 'assistant', content: message.content }),
+          body: JSON.stringify({ 
+            role: 'assistant', 
+            content: message.content,
+            toolInvocations: message.toolInvocations 
+          }),
         });
 
         if (messages.length <= 1) {
@@ -78,10 +82,11 @@ export default function ChatPage() {
     const res = await fetch(`/api/chats/${chatId}/messages`);
     const data = await res.json();
     if (data.messages?.length) {
-      setMessages(data.messages.map((m: { id: string; role: string; content: string }) => ({
+      setMessages(data.messages.map((m: any) => ({
         id: m.id,
         role: m.role as 'user' | 'assistant',
         content: m.content,
+        toolInvocations: m.tool_result || undefined,
       })));
     }
   }, [chatId, setMessages]);
