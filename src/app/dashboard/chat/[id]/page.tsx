@@ -2,8 +2,8 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { useChat } from 'ai/react';
-import type { Message } from 'ai';
+import { useChat } from '@ai-sdk/react';
+import type { UIMessage as Message } from '@ai-sdk/react';
 import { useParams } from 'next/navigation';
 import { MODELS } from '@/lib/models';
 
