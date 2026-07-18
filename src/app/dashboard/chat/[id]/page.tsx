@@ -19,22 +19,24 @@ export default function ChatPage() {
     api: '/api/chat',
     body: { modelId: selectedModel, chatId },
     onFinish: async (message: Message) => {
-      // Save assistant message to DB
-      await fetch(`/api/chats/${chatId}/messages`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ role: 'assistant', content: message.content }),
-      });
-
-      // Auto-title on first exchange
-      if (messages.length <= 1 && message.content) {
-        const title = message.content.slice(0, 60).replace(/[#*_\n]/g, '').trim() || 'Chat';
-        setChatTitle(title);
-        await fetch('/api/chats', {
-          method: 'PATCH',
+      // Only save if there's actual text content (skip tool-only responses)
+      if (message.content && message.content.trim()) {
+        await fetch(`/api/chats/${chatId}/messages`, {
+          method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ chatId, title }),
+          body: JSON.stringify({ role: 'assistant', content: message.content }),
         });
+
+        // Auto-title on first exchange
+        if (messages.length <= 1) {
+          const title = message.content.slice(0, 60).replace(/[#*_\n]/g, '').trim() || 'Chat';
+          setChatTitle(title);
+          await fetch('/api/chats', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ chatId, title }),
+          });
+        }
       }
     },
     onError: (error: any) => {
