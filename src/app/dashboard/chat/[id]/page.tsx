@@ -25,7 +25,7 @@ export default function ChatPage() {
     api: '/api/chat',
     body: { modelId: selectedModel, chatId },
     onFinish: async (message: Message) => {
-      if (message.content && message.content.trim()) {
+      if ((message.content && message.content.trim()) || (message.toolInvocations && message.toolInvocations.length > 0)) {
         await fetch(`/api/chats/${chatId}/messages`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
