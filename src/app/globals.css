@@ -1147,4 +1147,23 @@ select:focus {
   .landing-hero {
     padding: 80px 20px 40px;
   }
+
+  .modal {
+    padding: 24px;
+    margin: 16px;
+    width: calc(100% - 32px);
+  }
+
+  .chat-input-wrapper {
+    padding: 12px 16px;
+    border-radius: 20px;
+  }
+
+  .message {
+    max-width: 95%;
+  }
+
+  .sidebar-header {
+    padding: 24px 20px;
+  }
 }
