@@ -59,6 +59,12 @@ export default function DashboardLayout({
     loadProfile();
   }, [pathname, loadChats, loadProfile]);
 
+  useEffect(() => {
+    const handleCreditUpdate = () => loadProfile();
+    window.addEventListener('credit-update', handleCreditUpdate);
+    return () => window.removeEventListener('credit-update', handleCreditUpdate);
+  }, [loadProfile]);
+
   const createNewChat = async () => {
     const defaultModel = MODELS[0];
     const res = await fetch('/api/chats', {

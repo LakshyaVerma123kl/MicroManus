@@ -45,6 +45,9 @@ export default function ChatPage() {
             body: JSON.stringify({ chatId, title }),
           });
         }
+        
+        // Dispatch credit update event
+        window.dispatchEvent(new Event('credit-update'));
       }
     },
     onError: (error: any) => {
@@ -250,7 +253,7 @@ export default function ChatPage() {
 
 // Collapsible Tool Invocation Component
 function ToolInvocationCard({ tool }: { tool: any }) {
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(true);
   const isSearch = tool.toolName === 'web_search';
   const isGenerating = !('result' in tool);
   
