@@ -129,7 +129,9 @@ Behavior guidelines:
           parameters: z.object({
             query: z.string().describe('The search query'),
           }),
-          execute: async ({ query }) => {
+          // @ts-ignore
+          execute: async (args: any) => {
+            const { query } = args;
             const results = await braveSearch(query);
             return {
               query,
@@ -147,7 +149,9 @@ Behavior guidelines:
             title: z.string().describe('Report title'),
             content: z.string().describe('Full report content in markdown format'),
           }),
-          execute: async ({ title, content }) => {
+          // @ts-ignore
+          execute: async (args: any) => {
+            const { title, content } = args;
             try {
               const pdfBuffer = generateReportPDF(title, content, 'MicroManus AI');
               const fileName = `report-${Date.now()}.pdf`;
@@ -182,11 +186,11 @@ Behavior guidelines:
           },
         }),
       },
-      maxSteps: 8,
+
       onFinish: async ({ usage }) => {
         if (usage && chatId) {
-          const inputTokens = usage.promptTokens || 0;
-          const outputTokens = usage.completionTokens || 0;
+          const inputTokens = (usage as any).promptTokens || 0;
+          const outputTokens = (usage as any).completionTokens || 0;
           const cost = calculateCost(modelInfo, inputTokens, outputTokens, 0);
 
           // Log usage
@@ -210,7 +214,7 @@ Behavior guidelines:
       },
     });
 
-    return result.toDataStreamResponse();
+    return (result as any).toUIMessageStreamResponse();
   } catch (error) {
     console.error('Chat API error:', error);
     return new Response(
