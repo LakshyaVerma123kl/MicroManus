@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { streamText } from 'ai';
+import { streamText, generateText } from 'ai';
 import { createOpenAI } from '@ai-sdk/openai';
 import { createAnthropic } from '@ai-sdk/anthropic';
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
@@ -133,13 +133,18 @@ Behavior guidelines:
           }),
           execute: async ({ query }) => {
             const results = await braveSearch(query);
+            
+            // Use AI to summarize the search results to save tokens
+            const summaryResponse = await generateText({
+              model,
+              system: 'You are an expert summarizer. Extract the most critical facts, numbers, and direct answers from these search results relating to the query. Be extremely concise and factual.',
+              prompt: `Query: "${query}"\n\nSearch Results:\n${JSON.stringify(results)}`,
+            });
+
             return {
               query,
-              results: results.map(r => ({
-                title: r.title,
-                url: r.url,
-                snippet: r.snippet,
-              })),
+              summary: summaryResponse.text,
+              sources: results.map(r => ({ title: r.title, url: r.url }))
             };
           },
         },

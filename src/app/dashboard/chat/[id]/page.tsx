@@ -284,7 +284,21 @@ function ToolInvocationCard({ tool }: { tool: any }) {
             exit={{ height: 0, opacity: 0 }}
             className="tool-call-result"
           >
-            {isSearch && tool.result?.results ? (
+            {isSearch && tool.result?.summary ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <p style={{ lineHeight: 1.6, color: 'var(--text-primary)' }}>{tool.result.summary}</p>
+                <div style={{ marginTop: '8px', fontSize: '0.85rem' }}>
+                  <strong style={{ color: 'var(--text-secondary)' }}>Sources:</strong>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '8px' }}>
+                    {(tool.result.sources || []).map((r: any, ri: number) => (
+                      <a key={ri} href={r.url} target="_blank" rel="noopener noreferrer" className="badge badge-accent" style={{ textDecoration: 'none', textTransform: 'none' }}>
+                        {r.title.slice(0, 40)}{r.title.length > 40 ? '...' : ''}
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            ) : isSearch && tool.result?.results ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 {(tool.result.results as Array<{ title: string; url: string; snippet: string }>).map((r, ri) => (
                   <div key={ri}>
