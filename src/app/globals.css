@@ -919,6 +919,22 @@ select:focus {
   display: flex;
 }
 
+.flex-col {
+  flex-direction: column;
+}
+
+.w-full {
+  width: 100%;
+}
+
+.text-accent {
+  color: var(--accent);
+}
+
+.text-cyan {
+  color: var(--cyan);
+}
+
 .items-center {
   align-items: center;
 }
