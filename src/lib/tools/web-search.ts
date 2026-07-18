@@ -62,12 +62,16 @@ async function searchWithBrave(query: string, count: number, apiKey: string): Pr
 }
 
 async function searchWithDuckDuckGo(query: string, count: number): Promise<SearchResult[]> {
+  // Try DuckDuckGo HTML lite with browser-like headers
   try {
-    // Use DuckDuckGo HTML lite — works without any API key
     const params = new URLSearchParams({ q: query });
     const response = await fetch(`https://html.duckduckgo.com/html/?${params}`, {
       headers: {
-        'User-Agent': 'MicroManus Research Agent/1.0',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.9',
+        'Accept-Encoding': 'identity',
+        'Referer': 'https://duckduckgo.com/',
       },
     });
 
@@ -85,7 +89,25 @@ async function searchWithDuckDuckGo(query: string, count: number): Promise<Searc
     // Fallback to DuckDuckGo instant answer API
     return searchWithDDGInstant(query);
   } catch (error) {
-    console.error('DuckDuckGo search error:', error);
+    console.error('DuckDuckGo HTML search error:', error);
+    
+    // Second fallback: try the instant answer API
+    try {
+      const instantResults = await searchWithDDGInstant(query);
+      if (instantResults.length > 0 && instantResults[0].title !== 'Limited results') {
+        return instantResults;
+      }
+    } catch (e) {
+      console.error('DDG instant fallback also failed:', e);
+    }
+
+    // Third fallback: use Google web search via scraping
+    try {
+      return await searchWithGoogleScrape(query, count);
+    } catch (e) {
+      console.error('Google scrape fallback also failed:', e);
+    }
+
     return [{
       title: 'Search temporarily unavailable',
       url: '',
@@ -180,4 +202,51 @@ async function searchWithDDGInstant(query: string): Promise<SearchResult[]> {
       snippet: 'Search service is temporarily unavailable.',
     }];
   }
+}
+
+async function searchWithGoogleScrape(query: string, count: number): Promise<SearchResult[]> {
+  const params = new URLSearchParams({ q: query, num: count.toString() });
+  const response = await fetch(`https://www.google.com/search?${params}`, {
+    headers: {
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36',
+      'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+      'Accept-Language': 'en-US,en;q=0.9',
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`Google scrape error: ${response.status}`);
+  }
+
+  const html = await response.text();
+  const results: SearchResult[] = [];
+
+  // Parse Google search results - extract titles and URLs from <a> tags within result divs
+  // Google results have <h3> tags for titles inside <a> links
+  const linkPattern = /<a[^>]*href="\/url\?q=([^"&]+)[^"]*"[^>]*>[\s\S]*?<h3[^>]*>([\s\S]*?)<\/h3>/gi;
+  let match;
+  while ((match = linkPattern.exec(html)) !== null && results.length < count) {
+    const url = decodeURIComponent(match[1]);
+    const title = match[2].replace(/<[^>]*>/g, '').trim();
+    if (title && url && url.startsWith('http')) {
+      results.push({ title, url, snippet: '' });
+    }
+  }
+
+  // If the pattern above didn't work, try a simpler approach
+  if (results.length === 0) {
+    const simplePattern = /<h3[^>]*class="[^"]*"[^>]*>([\s\S]*?)<\/h3>/gi;
+    while ((match = simplePattern.exec(html)) !== null && results.length < count) {
+      const title = match[1].replace(/<[^>]*>/g, '').trim();
+      if (title) {
+        results.push({ title, url: '', snippet: `Search result for "${query}"` });
+      }
+    }
+  }
+
+  if (results.length === 0) {
+    throw new Error('No results parsed from Google');
+  }
+
+  return results;
 }
