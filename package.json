@@ -9,13 +9,12 @@
     "lint": "eslint"
   },
   "dependencies": {
-    "@ai-sdk/anthropic": "^0.0.51",
-    "@ai-sdk/google": "^0.0.51",
-    "@ai-sdk/openai": "^0.0.65",
-    "@ai-sdk/react": "^4.0.34",
+    "@ai-sdk/anthropic": "0.0.51",
+    "@ai-sdk/google": "0.0.51",
+    "@ai-sdk/openai": "0.0.65",
     "@supabase/ssr": "^0.12.3",
     "@supabase/supabase-js": "^2.110.7",
-    "ai": "^3.4.9",
+    "ai": "3.4.9",
     "jspdf": "^4.2.1",
     "next": "16.2.10",
     "react": "19.2.4",

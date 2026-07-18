@@ -60,7 +60,7 @@ export const MODELS: ModelInfo[] = [
     id: 'gemini-3.1-flash-lite',
     name: 'Gemini 3.1 Flash-Lite',
     provider: 'google',
-    modelId: 'gemini-3.1-flash-lite',
+    modelId: 'gemini-2.0-flash-lite',
     inputCostPer1M: 0.05,
     outputCostPer1M: 0.20,
     cacheCostPer1M: 0.0125,

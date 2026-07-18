@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { streamText, tool } from 'ai';
+import { streamText } from 'ai';
 import { createOpenAI } from '@ai-sdk/openai';
 import { createAnthropic } from '@ai-sdk/anthropic';
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
@@ -124,14 +124,12 @@ Behavior guidelines:
 - Format your responses with markdown for readability.`,
       messages,
       tools: {
-        web_search: tool({
+        web_search: {
           description: 'Search the web for current information on any topic. Use this for recent events, facts, data, or anything requiring up-to-date info.',
           parameters: z.object({
             query: z.string().describe('The search query'),
           }),
-          // @ts-ignore
-          execute: async (args: any) => {
-            const { query } = args;
+          execute: async ({ query }) => {
             const results = await braveSearch(query);
             return {
               query,
@@ -142,16 +140,14 @@ Behavior guidelines:
               })),
             };
           },
-        }),
-        generate_report: tool({
+        },
+        generate_report: {
           description: 'Generate a PDF research report. Use when the user asks for a report, document, or PDF.',
           parameters: z.object({
             title: z.string().describe('Report title'),
             content: z.string().describe('Full report content in markdown format'),
           }),
-          // @ts-ignore
-          execute: async (args: any) => {
-            const { title, content } = args;
+          execute: async ({ title, content }) => {
             try {
               const pdfBuffer = generateReportPDF(title, content, 'MicroManus AI');
               const fileName = `report-${Date.now()}.pdf`;
@@ -184,13 +180,13 @@ Behavior guidelines:
               };
             }
           },
-        }),
+        },
       },
 
       onFinish: async ({ usage }) => {
         if (usage && chatId) {
-          const inputTokens = (usage as any).promptTokens || 0;
-          const outputTokens = (usage as any).completionTokens || 0;
+          const inputTokens = usage.promptTokens || 0;
+          const outputTokens = usage.completionTokens || 0;
           const cost = calculateCost(modelInfo, inputTokens, outputTokens, 0);
 
           // Log usage
@@ -214,7 +210,7 @@ Behavior guidelines:
       },
     });
 
-    return (result as any).toUIMessageStreamResponse();
+    return result.toAIStreamResponse();
   } catch (error) {
     console.error('Chat API error:', error);
     return new Response(
