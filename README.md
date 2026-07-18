@@ -1,34 +1,64 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# MicroManus ⚡
 
-## Getting Started
+**MicroManus** is a premium, AI-powered deep research platform designed to deliver professional-grade synthesis of complex topics. Built with a stunning glassmorphic UI and powered by multi-provider LLM support (OpenAI, Anthropic, Gemini), it gives you real-time access to the web while ensuring your data remains securely yours.
 
-First, run the development server:
+---
 
+## ✨ Features
+
+- **Multi-Provider AI Intelligence**: Seamlessly switch between OpenAI (GPT-4o), Anthropic (Claude 3.5 Sonnet), and Google (Gemini 1.5 Flash).
+- **Deep Web Research**: Built-in automated web search capable of scraping and synthesizing real-time data from Brave Search, DuckDuckGo, and Wikipedia to bypass hallucinations.
+- **God-Tier UI/UX**: 
+  - Dynamic Aurora mesh background gradients
+  - Native, iMessage-style chat bubbles with smooth Framer Motion animations
+  - Glassmorphic sidebars and layout elements
+  - Professional Lucide iconography and Markdown code formatting
+- **End-to-End Security**: Bring Your Own Key (BYOK) architecture. API keys are encrypted at rest via AES-256 in Supabase.
+- **PDF Report Generation**: Instantly compile deep research chats into formatted PDF reports for offline viewing.
+- **Credit & Cost Tracking**: Native Stripe integration for purchasing credits, coupled with real-time token cost analytics.
+
+## 🛠 Tech Stack
+
+- **Framework**: [Next.js 16 (App Router)](https://nextjs.org/)
+- **Language**: TypeScript
+- **Styling**: Hand-crafted Vanilla CSS (Custom Design Tokens, Flexbox, Glassmorphism)
+- **AI Integration**: [Vercel AI SDK v3.4.9](https://sdk.vercel.ai/docs)
+- **Database & Auth**: [Supabase](https://supabase.com/) (PostgreSQL, Edge Functions, Row-Level Security)
+- **Animations**: [Framer Motion](https://www.framer.com/motion/)
+- **Icons**: [Lucide React](https://lucide.dev/)
+
+## 🚀 Getting Started
+
+### Prerequisites
+- Node.js (v18+)
+- A Supabase Project (Database, Auth, and Storage enabled)
+- (Optional) Stripe API Keys for payments
+- (Optional) Brave Search API Key for premium search results
+
+### 1. Clone & Install
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone https://github.com/LakshyaVerma123kl/MicroManus.git
+cd MicroManus
+npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 2. Environment Variables
+Copy the `.env.example` file to `.env` and fill in your Supabase, Stripe, and generic configuration details:
+```bash
+cp .env.example .env
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 3. Database Setup
+Run the included `supabase-schema.sql` file in your Supabase SQL editor to create the necessary tables (`profiles`, `chats`, `messages`, `api_keys`, `usage_logs`), functions, and Row-Level Security (RLS) policies.
 
-## Learn More
+### 4. Run the Development Server
+```bash
+npm run dev
+```
+Open [http://localhost:3000](http://localhost:3000) to access the landing page.
 
-To learn more about Next.js, take a look at the following resources:
+## 🔒 Security Note
+This platform uses a **Bring Your Own Key (BYOK)** model. The platform itself does not cover your LLM inference costs. You must provide your own API keys in the Dashboard, which are securely encrypted using an application-level secret before being stored in the database.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+---
+*Built for the future of automated, autonomous AI research.*
