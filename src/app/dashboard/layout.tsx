@@ -229,8 +229,8 @@ export default function DashboardLayout({
                   {keys.map((k) => (
                     <div key={k.provider} style={{
                       display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                      padding: '12px 16px', background: 'rgba(0,0,0,0.2)', borderRadius: 'var(--radius-sm)',
-                      border: '1px solid var(--border)', marginBottom: '8px'
+                      padding: '16px 20px', background: 'rgba(0,0,0,0.2)', borderRadius: 'var(--radius-sm)',
+                      border: '1px solid var(--border)', marginBottom: '12px'
                     }}>
                       <div className="flex items-center gap-3">
                         <span className="badge badge-accent" style={{ textTransform: 'capitalize' }}>{k.provider}</span>
@@ -238,7 +238,7 @@ export default function DashboardLayout({
                           <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--green)' }} /> Connected
                         </span>
                       </div>
-                      <button className="btn btn-danger" style={{ padding: '6px 12px', fontSize: '0.75rem' }}
+                      <button className="btn btn-danger" style={{ padding: '8px 16px', fontSize: '0.8rem' }}
                         onClick={() => deleteKey(k.provider)}>
                         Remove
                       </button>
@@ -247,7 +247,7 @@ export default function DashboardLayout({
                 </div>
               )}
 
-              <div className="flex flex-col gap-3">
+              <div className="flex flex-col gap-4">
                 <select
                   value={newKey.provider}
                   onChange={(e) => setNewKey(prev => ({ ...prev, provider: e.target.value }))}

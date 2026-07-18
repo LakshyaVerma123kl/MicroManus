@@ -80,6 +80,29 @@ body {
   background: rgba(255, 255, 255, 0.2);
 }
 
+/* Form Elements */
+input, select, textarea {
+  font-family: inherit;
+  font-size: 0.95rem;
+  padding: 14px 18px;
+  border-radius: var(--radius-sm);
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  outline: none;
+  transition: all var(--transition);
+}
+
+input:focus, select:focus, textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--border-focus);
+  background: rgba(0, 0, 0, 0.4);
+}
+
+input::placeholder, textarea::placeholder {
+  color: var(--text-muted);
+}
+
 a {
   color: var(--cyan);
   text-decoration: none;
@@ -832,10 +855,24 @@ select:focus {
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  padding: 32px;
+  padding: 40px;
   width: 100%;
   max-width: 500px;
   box-shadow: var(--shadow-lg);
+}
+
+.modal-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 12px;
+  color: var(--text-primary);
+}
+
+.modal-desc {
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  margin-bottom: 32px;
+  line-height: 1.6;
 }
 
 /* Spinners & Loaders */
