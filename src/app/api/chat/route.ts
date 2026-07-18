@@ -210,7 +210,7 @@ Behavior guidelines:
       },
     });
 
-    return result.toAIStreamResponse();
+    return result.toDataStreamResponse();
   } catch (error) {
     console.error('Chat API error:', error);
     return new Response(
