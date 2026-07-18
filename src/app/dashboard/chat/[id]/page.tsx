@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
@@ -6,6 +5,13 @@ import { useChat } from 'ai/react';
 import type { Message } from 'ai';
 import { useParams } from 'next/navigation';
 import { MODELS } from '@/lib/models';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  Bot, User, Search, FileText, ArrowUp, ChevronDown, 
+  ChevronRight, Copy, Check, Terminal 
+} from 'lucide-react';
 
 export default function ChatPage() {
   const params = useParams();
@@ -19,7 +25,6 @@ export default function ChatPage() {
     api: '/api/chat',
     body: { modelId: selectedModel, chatId },
     onFinish: async (message: Message) => {
-      // Only save if there's actual text content (skip tool-only responses)
       if (message.content && message.content.trim()) {
         await fetch(`/api/chats/${chatId}/messages`, {
           method: 'POST',
@@ -27,7 +32,6 @@ export default function ChatPage() {
           body: JSON.stringify({ role: 'assistant', content: message.content }),
         });
 
-        // Auto-title on first exchange
         if (messages.length <= 1) {
           const title = message.content.slice(0, 60).replace(/[#*_\n]/g, '').trim() || 'Chat';
           setChatTitle(title);
@@ -40,7 +44,6 @@ export default function ChatPage() {
       }
     },
     onError: (error: any) => {
-      // Show error in an alert or push a system message so the user sees it immediately
       let msg = error.message || String(error);
       try {
         const parsed = JSON.parse(msg);
@@ -50,21 +53,18 @@ export default function ChatPage() {
     }
   });
 
-  // Handle initial prompt from Dashboard
   useEffect(() => {
     const initialPromptKey = `initial_prompt_${chatId}`;
     const initialPrompt = sessionStorage.getItem(initialPromptKey);
     
     if (initialPrompt) {
       sessionStorage.removeItem(initialPromptKey);
-      // Give the UI a tiny tick to mount, then auto-submit the initial prompt
       setTimeout(() => {
         append({
           role: 'user',
           content: initialPrompt,
         });
         
-        // Save user message to DB
         fetch(`/api/chats/${chatId}/messages`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -74,7 +74,6 @@ export default function ChatPage() {
     }
   }, [chatId, append]);
 
-  // Load existing messages
   const loadMessages = useCallback(async () => {
     const res = await fetch(`/api/chats/${chatId}/messages`);
     const data = await res.json();
@@ -91,24 +90,21 @@ export default function ChatPage() {
     loadMessages();
   }, [loadMessages]);
 
-  // Scroll to bottom
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+  }, [messages, isLoading]); // scroll on new message or loading state change
 
-  // Auto-resize textarea
   const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     handleInputChange(e);
     const ta = e.target;
     ta.style.height = 'auto';
-    ta.style.height = Math.min(ta.scrollHeight, 160) + 'px';
+    ta.style.height = Math.min(ta.scrollHeight, 200) + 'px';
   };
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim()) return;
 
-    // Save user message to DB
     await fetch(`/api/chats/${chatId}/messages`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -129,51 +125,14 @@ export default function ChatPage() {
     }
   };
 
-  const renderContent = (content: string) => {
-    // Simple markdown-like rendering
-    return content.split('\n').map((line, i) => {
-      if (line.startsWith('### ')) return <h4 key={i} style={{ margin: '12px 0 6px', fontWeight: 600 }}>{line.slice(4)}</h4>;
-      if (line.startsWith('## ')) return <h3 key={i} style={{ margin: '14px 0 6px', fontWeight: 700 }}>{line.slice(3)}</h3>;
-      if (line.startsWith('# ')) return <h2 key={i} style={{ margin: '16px 0 8px', fontWeight: 700 }}>{line.slice(2)}</h2>;
-      if (line.startsWith('- ') || line.startsWith('* ')) return <li key={i} style={{ marginLeft: '16px', marginBottom: '4px' }}>{formatInline(line.slice(2))}</li>;
-      if (line.match(/^\d+\. /)) return <li key={i} style={{ marginLeft: '16px', marginBottom: '4px', listStyleType: 'decimal' }}>{formatInline(line.replace(/^\d+\. /, ''))}</li>;
-      if (line.trim() === '') return <br key={i} />;
-      return <p key={i} style={{ marginBottom: '6px' }}>{formatInline(line)}</p>;
-    });
-  };
-
-  const formatInline = (text: string) => {
-    // Bold
-    const parts = text.split(/(\*\*[^*]+\*\*)/g);
-    return parts.map((part, i) => {
-      if (part.startsWith('**') && part.endsWith('**')) {
-        return <strong key={i}>{part.slice(2, -2)}</strong>;
-      }
-      // Links
-      const linkRegex = /\[([^\]]+)\]\(([^)]+)\)/g;
-      const segments: (string | React.ReactNode)[] = [];
-      let lastIndex = 0;
-      let match;
-      while ((match = linkRegex.exec(part)) !== null) {
-        if (match.index > lastIndex) segments.push(part.slice(lastIndex, match.index));
-        segments.push(<a key={`${i}-${match.index}`} href={match[2]} target="_blank" rel="noopener noreferrer">{match[1]}</a>);
-        lastIndex = match.index + match[0].length;
-      }
-      if (lastIndex < part.length) segments.push(part.slice(lastIndex));
-      return segments.length > 0 ? <span key={i}>{segments}</span> : part;
-    });
-  };
-
   return (
     <>
-      {/* Header */}
       <div className="chat-header">
         <span className="chat-header-title">{chatTitle}</span>
         <select
           className="model-select"
           value={selectedModel}
           onChange={(e) => setSelectedModel(e.target.value)}
-          id="model-selector"
         >
           {MODELS.map((m) => (
             <option key={m.id} value={m.id}>
@@ -183,82 +142,79 @@ export default function ChatPage() {
         </select>
       </div>
 
-      {/* Messages */}
       <div className="chat-messages">
         {messages.length === 0 && (
-          <div className="empty-state">
-            <div className="empty-state-icon">🔬</div>
-            <h3>Start your research</h3>
+          <div className="empty-state" style={{ height: '100%' }}>
+            <div className="empty-icon-wrap"><Bot size={36} /></div>
+            <h2>Start your research</h2>
             <p>Ask me anything. I&apos;ll search the web and synthesize a thorough answer.</p>
           </div>
         )}
 
-        {messages.map((message: Message) => (
-          <div key={message.id} className={`message ${message.role}`}>
-            <div className="message-avatar">
-              {message.role === 'assistant' ? 'M' : 'U'}
-            </div>
-            <div className="message-bubble">
-              {/* Show tool invocations */}
-              {message.toolInvocations?.map((tool: any, idx: number) => (
-                <div key={idx} className="tool-call-card">
-                  <div className="tool-call-header">
-                    {tool.toolName === 'web_search' ? '🔍' : '📄'} {tool.toolName === 'web_search' ? 'Searching the web' : 'Generating report'}
-                    {('args' in tool) && tool.args && typeof tool.args === 'object' && 'query' in tool.args ? `: "${(tool.args as { query: string }).query}"` : ''}
-                  </div>
-                  {'result' in tool && tool.result && (
-                    <div className="tool-call-result">
-                      {tool.toolName === 'web_search' && typeof tool.result === 'object' && tool.result !== null && 'results' in tool.result ? (
-                        <div>
-                          {(tool.result as { results: Array<{ title: string; url: string; snippet: string }> }).results.map((r, ri) => (
-                            <div key={ri} style={{ marginBottom: '6px' }}>
-                              <a href={r.url} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--cyan)', fontSize: '0.8rem' }}>
-                                {r.title}
-                              </a>
-                              <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '2px' }}>{r.snippet}</p>
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <pre style={{ fontSize: '0.75rem', whiteSpace: 'pre-wrap' }}>
-                          {JSON.stringify(tool.result, null, 2)}
-                        </pre>
-                      )}
-                    </div>
-                  )}
-                  {!('result' in tool) && (
-                    <div className="thinking">
-                      <div className="thinking-dots">
-                        <span /><span /><span />
-                      </div>
-                      Processing...
-                    </div>
-                  )}
-                </div>
-              ))}
-              {message.content && renderContent(message.content)}
-            </div>
-          </div>
-        ))}
-
-        {isLoading && messages[messages.length - 1]?.role !== 'assistant' && (
-          <div className="message assistant">
-            <div className="message-avatar">M</div>
-            <div className="message-bubble">
-              <div className="thinking">
-                <div className="thinking-dots">
-                  <span /><span /><span />
-                </div>
-                Thinking...
+        <AnimatePresence initial={false}>
+          {messages.map((message: Message) => (
+            <motion.div 
+              key={message.id} 
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              className={`message ${message.role}`}
+            >
+              <div className="message-avatar">
+                {message.role === 'assistant' ? <Bot size={20} /> : <User size={20} />}
               </div>
-            </div>
-          </div>
-        )}
+              
+              <div className="message-bubble">
+                {/* Render Tool Invocations */}
+                {message.toolInvocations?.map((tool: any, idx: number) => (
+                  <ToolInvocationCard key={idx} tool={tool} />
+                ))}
+
+                {/* Render Content */}
+                {message.content && (
+                  <div className="markdown-prose">
+                    <ReactMarkdown 
+                      remarkPlugins={[remarkGfm]}
+                      components={{
+                        code({ node, className, children, ...props }: any) {
+                          const match = /language-(\w+)/.exec(className || '');
+                          const isInline = !match && !String(children).includes('\n');
+                          return !isInline ? (
+                            <CodeBlock language={match?.[1]} value={String(children).replace(/\n$/, '')} />
+                          ) : (
+                            <code className={className} {...props}>{children}</code>
+                          );
+                        }
+                      }}
+                    >
+                      {message.content}
+                    </ReactMarkdown>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          ))}
+          
+          {isLoading && messages[messages.length - 1]?.role !== 'assistant' && (
+            <motion.div 
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="message assistant"
+            >
+              <div className="message-avatar"><Bot size={20} /></div>
+              <div className="message-bubble" style={{ padding: '8px 16px' }}>
+                <div className="typing-indicator">
+                  <span className="typing-dot" />
+                  <span className="typing-dot" />
+                  <span className="typing-dot" />
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input */}
       <div className="chat-input-area">
         <form onSubmit={onSubmit} className="chat-input-wrapper">
           <textarea
@@ -267,28 +223,104 @@ export default function ChatPage() {
             value={input}
             onChange={handleTextareaChange}
             onKeyDown={handleKeyDown}
-            placeholder="Ask me anything... (Shift+Enter for new line)"
+            placeholder="Ask anything... (Shift+Enter for new line)"
             rows={1}
             disabled={isLoading}
-            id="chat-input"
           />
           <button
             type="submit"
             className="send-btn"
             disabled={isLoading || !input.trim()}
-            id="send-btn"
           >
-            {isLoading ? (
-              <span className="spinner" style={{ width: '16px', height: '16px', borderWidth: '2px' }} />
-            ) : (
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="22" y1="2" x2="11" y2="13" />
-                <polygon points="22 2 15 22 11 13 2 9 22 2" />
-              </svg>
-            )}
+            {isLoading ? <span className="spinner" /> : <ArrowUp size={20} strokeWidth={2.5} />}
           </button>
         </form>
+        <div style={{ textAlign: 'center', marginTop: '12px', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+          MicroManus can make mistakes. Consider verifying critical information.
+        </div>
       </div>
     </>
+  );
+}
+
+// Collapsible Tool Invocation Component
+function ToolInvocationCard({ tool }: { tool: any }) {
+  const [expanded, setExpanded] = useState(false);
+  const isSearch = tool.toolName === 'web_search';
+  const isGenerating = !('result' in tool);
+  
+  return (
+    <div className="tool-call-card">
+      <div 
+        className="tool-call-header" 
+        onClick={() => setExpanded(!expanded)}
+      >
+        {isGenerating ? (
+          <span className="spinner" style={{ width: '14px', height: '14px', borderWidth: '2px', marginRight: '4px' }} />
+        ) : (
+          expanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />
+        )}
+        
+        {isSearch ? <Search size={14} className="text-cyan" /> : <Terminal size={14} className="text-accent" />}
+        <span>{isSearch ? 'Web Search' : tool.toolName}</span>
+        
+        {tool.args?.query && (
+          <span style={{ color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '300px' }}>
+            "{tool.args.query}"
+          </span>
+        )}
+      </div>
+
+      <AnimatePresence>
+        {expanded && 'result' in tool && (
+          <motion.div 
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            className="tool-call-result"
+          >
+            {isSearch && tool.result?.results ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {(tool.result.results as Array<{ title: string; url: string; snippet: string }>).map((r, ri) => (
+                  <div key={ri}>
+                    <a href={r.url} target="_blank" rel="noopener noreferrer" className="tool-link" style={{ fontWeight: 500, display: 'block', marginBottom: '4px' }}>
+                      {r.title}
+                    </a>
+                    <p style={{ lineHeight: 1.5 }}>{r.snippet}</p>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <pre style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-all', fontFamily: 'inherit' }}>
+                {JSON.stringify(tool.result, null, 2)}
+              </pre>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+// Code block with copy button
+function CodeBlock({ language, value }: { language?: string; value: string }) {
+  const [copied, setCopied] = useState(false);
+
+  const onCopy = () => {
+    navigator.clipboard.writeText(value);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <pre>
+      <div className="code-block-header">
+        <span>{language || 'text'}</span>
+        <button onClick={onCopy} className="copy-btn">
+          {copied ? <><Check size={14} /> Copied</> : <><Copy size={14} /> Copy</>}
+        </button>
+      </div>
+      <code>{value}</code>
+    </pre>
   );
 }

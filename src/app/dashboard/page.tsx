@@ -3,14 +3,16 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { MODELS } from '@/lib/models';
+import { Bot, Search, FileText, BrainCircuit, ArrowUp } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 export default function DashboardPage() {
   const [input, setInput] = useState('');
   const [isStarting, setIsStarting] = useState(false);
   const router = useRouter();
 
-  const handleStart = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleStart = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     if (!input.trim() || isStarting) return;
     setIsStarting(true);
 
@@ -23,7 +25,6 @@ export default function DashboardPage() {
     const data = await res.json();
     
     if (data.chat) {
-      // Use sessionStorage to pass the initial prompt to the chat page
       sessionStorage.setItem(`initial_prompt_${data.chat.id}`, input);
       router.push(`/dashboard/chat/${data.chat.id}`);
     } else {
@@ -34,29 +35,62 @@ export default function DashboardPage() {
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      handleStart(e);
+      handleStart();
     }
   };
 
+  const suggestions = [
+    { text: "Find the latest news on AI models", icon: <Search size={14} /> },
+    { text: "Write a research report on Quantum Computing", icon: <FileText size={14} /> },
+    { text: "Analyze the economic impact of AGI", icon: <BrainCircuit size={14} /> },
+  ];
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', maxWidth: '800px', margin: '0 auto' }}>
-      <div className="empty-state" style={{ flex: 1, display: 'flex', justifyContent: 'center', border: 'none' }}>
-        <div style={{ textAlign: 'center' }}>
-          <div className="empty-state-icon">🔬</div>
-          <h2 style={{ fontSize: '1.8rem', marginBottom: '16px' }}>Welcome to MicroManus</h2>
-          <p style={{ color: 'var(--text-secondary)', marginBottom: '24px', fontSize: '1.1rem' }}>
-            What would you like to research today?
-          </p>
-          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', justifyContent: 'center' }}>
-            <span className="badge badge-accent">🔍 Web Search</span>
-            <span className="badge badge-green">📄 PDF Reports</span>
-            <span className="badge badge-orange">🧠 Multi-step Reasoning</span>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', maxWidth: '840px', margin: '0 auto', position: 'relative' }}>
+      
+      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="empty-state"
+        >
+          <div className="empty-icon-wrap">
+            <Bot size={36} />
           </div>
-        </div>
+          <h2>What would you like to research?</h2>
+          <p>The agent will search the live web and synthesize a complete answer.</p>
+          
+          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', justifyContent: 'center', marginTop: '12px' }}>
+            {suggestions.map((s, i) => (
+              <motion.button 
+                key={i}
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: i * 0.1 + 0.2 }}
+                className="suggestion-pill"
+                onClick={() => {
+                  setInput(s.text);
+                  // We need to wait a tick for state to update before submitting
+                  setTimeout(() => {
+                    const form = document.getElementById('start-chat-form');
+                    if (form) form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+                  }, 10);
+                }}
+              >
+                {s.icon} {s.text}
+              </motion.button>
+            ))}
+          </div>
+        </motion.div>
       </div>
 
-      <div className="chat-input-area" style={{ border: 'none', paddingBottom: '40px' }}>
-        <form onSubmit={handleStart} className="chat-input-wrapper" style={{ boxShadow: '0 8px 32px rgba(0,0,0,0.4)' }}>
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4 }}
+        className="chat-input-area"
+      >
+        <form id="start-chat-form" onSubmit={handleStart} className="chat-input-wrapper" style={{ paddingRight: '60px' }}>
           <textarea
             className="chat-input"
             value={input}
@@ -65,7 +99,7 @@ export default function DashboardPage() {
             placeholder="Ask anything... (Shift+Enter for new line)"
             rows={1}
             disabled={isStarting}
-            style={{ minHeight: '52px' }}
+            style={{ paddingRight: '0' }}
           />
           <button
             type="submit"
@@ -73,16 +107,16 @@ export default function DashboardPage() {
             disabled={isStarting || !input.trim()}
           >
             {isStarting ? (
-              <span className="spinner" style={{ width: '16px', height: '16px', borderWidth: '2px' }} />
+              <span className="spinner" />
             ) : (
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="22" y1="2" x2="11" y2="13" />
-                <polygon points="22 2 15 22 11 13 2 9 22 2" />
-              </svg>
+              <ArrowUp size={20} strokeWidth={2.5} />
             )}
           </button>
         </form>
-      </div>
+        <div style={{ textAlign: 'center', marginTop: '12px', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+          MicroManus can make mistakes. Consider verifying critical information.
+        </div>
+      </motion.div>
     </div>
   );
 }

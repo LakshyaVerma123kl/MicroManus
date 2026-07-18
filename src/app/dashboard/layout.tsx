@@ -6,6 +6,11 @@ import { createClient } from '@/lib/supabase/client';
 import { MODELS } from '@/lib/models';
 import { Chat } from '@/types';
 import { truncate } from '@/lib/utils';
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  MessageSquare, Plus, Trash2, BarChart2, Key, LogOut, 
+  PanelLeftClose, PanelLeftOpen, Bot, Zap, X
+} from 'lucide-react';
 
 export default function DashboardLayout({
   children,
@@ -49,7 +54,6 @@ export default function DashboardLayout({
     loadKeys();
   }, [loadChats, loadProfile, loadKeys]);
 
-  // Refresh sidebar when pathname changes (e.g. after creating a new chat)
   useEffect(() => {
     loadChats();
     loadProfile();
@@ -111,7 +115,6 @@ export default function DashboardLayout({
     
     setChats(prev => prev.filter(c => c.id !== chatId));
     
-    // If the active chat was deleted, go back to dashboard
     if (activeChatId === chatId) {
       router.push('/dashboard');
     }
@@ -119,30 +122,32 @@ export default function DashboardLayout({
 
   return (
     <div className="dashboard">
-      {/* Mobile hamburger */}
       <button
         className="sidebar-toggle"
         onClick={() => setSidebarOpen(!sidebarOpen)}
         aria-label="Toggle sidebar"
       >
-        {sidebarOpen ? '✕' : '☰'}
+        {sidebarOpen ? <X size={20} /> : <PanelLeftOpen size={20} />}
       </button>
 
-      {/* Sidebar overlay for mobile */}
       {sidebarOpen && (
         <div className="sidebar-overlay" onClick={() => setSidebarOpen(false)} />
       )}
 
-      {/* Sidebar */}
-      <aside className={`sidebar ${sidebarOpen ? 'sidebar-open' : ''}`}>
+      <aside className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
         <div className="sidebar-header">
-          <span className="sidebar-logo">MicroManus</span>
-          <span className="credit-badge">⚡ {credits}</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div style={{ color: 'var(--accent)' }}><Bot size={24} /></div>
+            <span className="sidebar-logo">MicroManus</span>
+          </div>
+          <div className="credit-badge">
+            <Zap size={14} /> {credits}
+          </div>
         </div>
 
-        <div style={{ padding: '12px' }}>
-          <button className="btn btn-primary w-full" onClick={createNewChat} id="new-chat-btn">
-            + New Research
+        <div style={{ padding: '0 16px 16px' }}>
+          <button className="btn btn-primary w-full" onClick={createNewChat} style={{ gap: '6px' }}>
+            <Plus size={18} /> New Research
           </button>
         </div>
 
@@ -155,14 +160,11 @@ export default function DashboardLayout({
                 router.push(`/dashboard/chat/${chat.id}`);
                 setSidebarOpen(false);
               }}
-              style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', overflow: 'hidden' }}>
-                <span>💬</span>
-                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {truncate(chat.title, 22)}
-                </span>
-              </div>
+              <MessageSquare size={16} />
+              <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {truncate(chat.title, 24)}
+              </span>
               <button
                 onClick={(e) => deleteChat(chat.id, e)}
                 style={{
@@ -173,98 +175,106 @@ export default function DashboardLayout({
                 onMouseEnter={(e) => e.currentTarget.style.color = 'var(--red)'}
                 onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-muted)'}
               >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <polyline points="3 6 5 6 21 6"></polyline>
-                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                </svg>
+                <Trash2 size={14} />
               </button>
             </div>
           ))}
           {chats.length === 0 && (
-            <p style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.8rem', padding: '20px' }}>
-              No chats yet. Start a new one!
-            </p>
+            <div style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '32px 16px' }}>
+              <MessageSquare size={32} style={{ opacity: 0.3, margin: '0 auto 12px' }} />
+              <p style={{ fontSize: '0.85rem' }}>No research chats yet.<br/>Start a new one!</p>
+            </div>
           )}
         </div>
 
         <div className="sidebar-footer">
           <button className="sidebar-nav-btn" onClick={() => { router.push('/dashboard/stats'); setSidebarOpen(false); }}>
-            📊 Cost & Stats
+            <BarChart2 size={18} /> Cost & Stats
           </button>
           <button className="sidebar-nav-btn" onClick={() => setShowKeyModal(true)}>
-            🔑 API Keys
+            <Key size={18} /> API Keys
           </button>
-          <button className="sidebar-nav-btn" onClick={handleLogout}>
-            🚪 Sign Out
+          <button className="sidebar-nav-btn" onClick={handleLogout} style={{ color: 'var(--red)' }}>
+            <LogOut size={18} /> Sign Out
           </button>
         </div>
       </aside>
 
-      {/* Main content */}
       <main className="main-content">
         {children}
       </main>
 
-      {/* API Key Modal */}
-      {showKeyModal && (
-        <div className="modal-overlay" onClick={(e) => {
-          if (e.target === e.currentTarget) setShowKeyModal(false);
-        }}>
-          <div className="modal animate-fade">
-            <h2 className="modal-title">API Keys</h2>
-            <p className="modal-desc">Add your provider API keys. Keys are encrypted before storage.</p>
+      <AnimatePresence>
+        {showKeyModal && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="modal-overlay" 
+            onClick={(e) => {
+              if (e.target === e.currentTarget) setShowKeyModal(false);
+            }}
+          >
+            <motion.div 
+              initial={{ scale: 0.95, opacity: 0, y: 10 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 10 }}
+              className="modal glass-card"
+            >
+              <h2 className="modal-title flex items-center gap-2"><Key size={20} className="text-accent" /> API Keys</h2>
+              <p className="modal-desc">Add your provider API keys. Keys are AES-256 encrypted before storage.</p>
 
-            {/* Existing keys */}
-            {keys.length > 0 && (
-              <div style={{ marginBottom: '20px' }}>
-                {keys.map((k) => (
-                  <div key={k.provider} style={{
-                    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                    padding: '10px 14px', background: 'var(--bg-input)', borderRadius: 'var(--radius-sm)',
-                    marginBottom: '8px'
-                  }}>
-                    <div>
-                      <span className="badge badge-accent" style={{ textTransform: 'capitalize' }}>{k.provider}</span>
-                      <span style={{ marginLeft: '8px', color: 'var(--green)', fontSize: '0.75rem' }}>●  Connected</span>
+              {keys.length > 0 && (
+                <div style={{ marginBottom: '24px' }}>
+                  {keys.map((k) => (
+                    <div key={k.provider} style={{
+                      display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                      padding: '12px 16px', background: 'rgba(0,0,0,0.2)', borderRadius: 'var(--radius-sm)',
+                      border: '1px solid var(--border)', marginBottom: '8px'
+                    }}>
+                      <div className="flex items-center gap-3">
+                        <span className="badge badge-accent" style={{ textTransform: 'capitalize' }}>{k.provider}</span>
+                        <span style={{ color: 'var(--green)', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--green)' }} /> Connected
+                        </span>
+                      </div>
+                      <button className="btn btn-danger" style={{ padding: '6px 12px', fontSize: '0.75rem' }}
+                        onClick={() => deleteKey(k.provider)}>
+                        Remove
+                      </button>
                     </div>
-                    <button className="btn btn-danger" style={{ padding: '4px 10px', fontSize: '0.75rem' }}
-                      onClick={() => deleteKey(k.provider)}>
-                      Remove
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
+                  ))}
+                </div>
+              )}
 
-            {/* Add new key */}
-            <div className="flex flex-col gap-md">
-              <select
-                value={newKey.provider}
-                onChange={(e) => setNewKey(prev => ({ ...prev, provider: e.target.value }))}
-                className="model-select"
-                style={{ width: '100%', padding: '10px 14px' }}
-              >
-                <option value="openai">OpenAI</option>
-                <option value="anthropic">Anthropic (Claude)</option>
-                <option value="google">Google (Gemini)</option>
-              </select>
-              <input
-                type="password"
-                placeholder={`Enter ${newKey.provider} API key`}
-                value={newKey.apiKey}
-                onChange={(e) => setNewKey(prev => ({ ...prev, apiKey: e.target.value }))}
-                style={{ width: '100%' }}
-              />
-              <div className="flex gap-sm" style={{ justifyContent: 'flex-end' }}>
-                <button className="btn btn-secondary" onClick={() => setShowKeyModal(false)}>Close</button>
-                <button className="btn btn-primary" onClick={saveApiKey} disabled={saving || !newKey.apiKey}>
-                  {saving ? <span className="spinner" /> : 'Save Key'}
-                </button>
+              <div className="flex flex-col gap-3">
+                <select
+                  value={newKey.provider}
+                  onChange={(e) => setNewKey(prev => ({ ...prev, provider: e.target.value }))}
+                  style={{ width: '100%' }}
+                >
+                  <option value="openai">OpenAI</option>
+                  <option value="anthropic">Anthropic (Claude)</option>
+                  <option value="google">Google (Gemini)</option>
+                </select>
+                <input
+                  type="password"
+                  placeholder={`Enter ${newKey.provider} API key`}
+                  value={newKey.apiKey}
+                  onChange={(e) => setNewKey(prev => ({ ...prev, apiKey: e.target.value }))}
+                  style={{ width: '100%' }}
+                />
+                <div className="flex gap-2" style={{ justifyContent: 'flex-end', marginTop: '12px' }}>
+                  <button className="btn btn-secondary" onClick={() => setShowKeyModal(false)}>Cancel</button>
+                  <button className="btn btn-primary" onClick={saveApiKey} disabled={saving || !newKey.apiKey}>
+                    {saving ? <span className="spinner" /> : 'Securely Save Key'}
+                  </button>
+                </div>
               </div>
-            </div>
-          </div>
-        </div>
-      )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
