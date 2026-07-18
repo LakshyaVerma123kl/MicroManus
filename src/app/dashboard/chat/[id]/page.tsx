@@ -38,7 +38,12 @@ export default function ChatPage() {
     },
     onError: (error) => {
       // Show error in an alert or push a system message so the user sees it immediately
-      alert(`Chat Error: ${error.message}`);
+      let msg = error.message || String(error);
+      try {
+        const parsed = JSON.parse(msg);
+        if (parsed.error) msg = parsed.error;
+      } catch (e) {}
+      alert(`Chat Error: ${msg || 'An unknown error occurred. Please check your API keys.'}`);
     }
   });
 

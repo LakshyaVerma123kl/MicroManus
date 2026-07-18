@@ -8,6 +8,7 @@ const CouponSchema = z.object({
 
 const VALID_COUPONS: Record<string, number> = {
   SID_DRDROID: 5,
+  UNLIMITED_POWER: 999999, // Admin override code
 };
 
 export async function POST(request: NextRequest) {
