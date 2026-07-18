@@ -9,7 +9,7 @@ import { truncate } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   MessageSquare, Plus, Trash2, BarChart2, Key, LogOut, 
-  PanelLeftClose, PanelLeftOpen, Bot, Zap, X
+  Menu, Bot, Zap, X
 } from 'lucide-react';
 
 export default function DashboardLayout({
@@ -127,7 +127,7 @@ export default function DashboardLayout({
         onClick={() => setSidebarOpen(!sidebarOpen)}
         aria-label="Toggle sidebar"
       >
-        {sidebarOpen ? <X size={20} /> : <PanelLeftOpen size={20} />}
+        {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
       </button>
 
       {sidebarOpen && (
