@@ -145,7 +145,7 @@ export default function DashboardLayout({
           </div>
         </div>
 
-        <div style={{ padding: '0 16px 16px' }}>
+        <div style={{ padding: '0 24px 24px' }}>
           <button className="btn btn-primary w-full" onClick={createNewChat} style={{ gap: '6px' }}>
             <Plus size={18} /> New Research
           </button>
