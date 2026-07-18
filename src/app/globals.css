@@ -271,19 +271,21 @@ input:focus, textarea:focus, select:focus {
   display: flex;
   gap: 16px;
   max-width: 840px;
+  align-items: flex-start;
 }
 
 .message.user { margin-left: auto; flex-direction: row-reverse; }
 
 .message-avatar {
-  width: 36px;
-  height: 36px;
-  border-radius: 12px;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
   color: white;
+  margin-top: 4px;
 }
 
 .message.assistant .message-avatar {
@@ -297,10 +299,9 @@ input:focus, textarea:focus, select:focus {
 }
 
 .message-bubble {
-  padding: 16px 20px;
-  border-radius: var(--radius);
+  padding: 10px 16px;
   font-size: 0.95rem;
-  line-height: 1.7;
+  line-height: 1.5;
   max-width: 720px;
   word-break: break-word;
 }
@@ -309,6 +310,7 @@ input:focus, textarea:focus, select:focus {
   background: var(--glass);
   border: 1px solid var(--border);
   color: var(--text-primary);
+  border-radius: 20px 20px 20px 4px;
 }
 
 .message.user .message-bubble {
@@ -316,13 +318,15 @@ input:focus, textarea:focus, select:focus {
   color: white;
   border: none;
   box-shadow: 0 4px 12px var(--accent-glow);
+  border-radius: 20px 20px 4px 20px;
 }
 
 /* Markdown Styles inside message */
 .markdown-prose > *:first-child { margin-top: 0; }
 .markdown-prose > *:last-child { margin-bottom: 0; }
 
-.markdown-prose p { margin-bottom: 16px; }
+.markdown-prose p { margin-bottom: 12px; }
+.markdown-prose p:last-child { margin-bottom: 0; }
 .markdown-prose h1, .markdown-prose h2, .markdown-prose h3 {
   color: var(--text-primary);
   font-weight: 700;
