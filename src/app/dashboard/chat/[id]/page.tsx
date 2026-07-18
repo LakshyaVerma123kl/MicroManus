@@ -14,7 +14,7 @@ export default function ChatPage() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  const { messages, input, handleInputChange, handleSubmit, isLoading, setMessages } = useChat({
+  const { messages, input, handleInputChange, handleSubmit, isLoading, setMessages, append } = useChat({
     api: '/api/chat',
     body: { modelId: selectedModel, chatId },
     onFinish: async (message: Message) => {
@@ -36,7 +36,35 @@ export default function ChatPage() {
         });
       }
     },
+    onError: (error) => {
+      // Show error in an alert or push a system message so the user sees it immediately
+      alert(`Chat Error: ${error.message}`);
+    }
   });
+
+  // Handle initial prompt from Dashboard
+  useEffect(() => {
+    const initialPromptKey = `initial_prompt_${chatId}`;
+    const initialPrompt = sessionStorage.getItem(initialPromptKey);
+    
+    if (initialPrompt) {
+      sessionStorage.removeItem(initialPromptKey);
+      // Give the UI a tiny tick to mount, then auto-submit the initial prompt
+      setTimeout(() => {
+        append({
+          role: 'user',
+          content: initialPrompt,
+        });
+        
+        // Save user message to DB
+        fetch(`/api/chats/${chatId}/messages`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ role: 'user', content: initialPrompt }),
+        });
+      }, 100);
+    }
+  }, [chatId, append]);
 
   // Load existing messages
   const loadMessages = useCallback(async () => {
